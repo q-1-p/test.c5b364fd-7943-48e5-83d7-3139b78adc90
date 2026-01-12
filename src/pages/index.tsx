@@ -77,7 +77,7 @@ function ToDoBar({
 								cursor: "pointer",
 							}}
 						>
-							Save
+							保存
 						</button>
 						<button
 							type="button"
@@ -91,7 +91,7 @@ function ToDoBar({
 								cursor: "pointer",
 							}}
 						>
-							Cancel
+							キャンセル
 						</button>
 					</div>
 				</div>
@@ -135,6 +135,22 @@ function ToDoBar({
 
 const STORAGE_KEY = "todos";
 
+const autoCompletePastTodos = (todos: ToDo[]): ToDo[] => {
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+
+	return todos.map((todo) => {
+		if (new Date(todo.createdAt) < today && !todo.completed) {
+			return {
+				...todo,
+				completed: true,
+				updatedAt: new Date().toISOString(),
+			};
+		}
+		return todo;
+	});
+};
+
 export default function Home() {
 	const [todos, setTodos] = useState<ToDo[]>([]);
 	const [isLoaded, setIsLoaded] = useState(false);
@@ -146,7 +162,10 @@ export default function Home() {
 		const storedTodos = localStorage.getItem(STORAGE_KEY);
 		if (storedTodos) {
 			try {
-				setTodos(JSON.parse(storedTodos));
+				const parsedTodos: ToDo[] = JSON.parse(storedTodos);
+				// 昨日以前のToDoを自動的に完了にする
+				const updatedTodos = autoCompletePastTodos(parsedTodos);
+				setTodos(updatedTodos);
 			} catch (e) {
 				console.error("Failed to parse todos from localStorage:", e);
 			}
